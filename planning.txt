@@ -1,0 +1,64 @@
+
+
+from console
+- update product
+    - select product name to update
+        - select to add or subtract for quantity
+            - add   
+                - update the item_quantity column
+            - subtract
+                - update the item_quantity column
+
+------------------------------------------------------------
+
+customer.js
+
+prompt for;
+    - user name
+    -user email
+    
+    prompt
+        - search store
+        - search by category
+
+       search store prompt
+            - display all products for sale
+                
+        search category prompt
+            - list all categories
+
+function for selecting the item to purchase can be a common function for either option above
+
+------------------------------------------
+
+shop by category
+
+array of categories
+    - inquirer prompt categories
+
+user selects category
+    array of item_names in selected category.
+
+    number of rows in the 'home' category
+
+
+-----------------------------------------
+
+
+manager file
+
+inquier propmpt
+    - login to shop
+    - other options
+        - manager sign in
+            -username
+            -password
+        - executive sign in
+            -username
+            -password
+
+    - manager area
+        - view products for sale (show all columns)
+        - view low inventory (under 5 items)
+        - add to inventory
+        - add new product
