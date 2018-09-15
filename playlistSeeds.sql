@@ -1,25 +1,15 @@
-DROP DATABASE IF EXISTS playlistDB;
-CREATE DATABASE playlistDB;
+DROP DATABASE IF EXISTS records_db;
 
-USE playlistDB;
+CREATE DATABASE records_db;
 
-CREATE TABLE songs(
+USE records_db;
+
+CREATE TABLE inventory (
   id INT NOT NULL AUTO_INCREMENT,
-  title VARCHAR(45) NULL,
-  artist VARCHAR(45) NULL,
-  genre VARCHAR(45) NULL,
+  item_name VARCHAR(45) NOT NULL,
+  item_category VARCHAR(45) NOT NULL,
+  item_cost DECIMAL( 10, 2 ) NOT NULL NOT NULL,
+  item_quantity INT(20) NOT NULL,
   PRIMARY KEY (id)
 );
-
-INSERT INTO songs (title, artist, genre)
-VALUES ("Human", "Krewella", "Dance");
-
-INSERT INTO songs (title, artist, genre)
-VALUES ("TRNDSTTR","Black Coast", "Dance");
-
-INSERT INTO songs (title, artist, genre)
-VALUES ("Who's Next", "The Who", "Classic Rock");
-
-INSERT INTO songs (title, artist, genre)
-VALUES ("Yellow Submarine", "The Beatles", "Classic Rock");
 

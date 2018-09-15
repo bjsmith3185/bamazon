@@ -5,10 +5,10 @@ var inquirer = require("inquirer");
 
 
 
-var table = new Table({
-    head: ['Name', 'Category', 'Cost', 'Quantity']
-    , colWidths: [30, 30, 30, 30]
-});
+// var table = new Table({
+//     head: ['Name', 'Category', 'Cost', 'Quantity']
+//     , colWidths: [30, 30, 30, 30]
+// });
 
 var connection = mysql.createConnection({
     host: "localhost",
@@ -39,79 +39,92 @@ function printDatabase() {
         if (err) throw err;
         // console.log(res[0].NumberOfProducts)
         numberOfRows = parseInt(res[0].NumberOfProducts);
-    });
+        // });
 
 
-    connection.query("SELECT * FROM inventory", function (err, res) {
-        if (err) throw err;
+        connection.query("SELECT * FROM inventory", function (err, res) {
+            if (err) throw err;
 
-        var table = new Table({
-            head: ['Name', 'Cost', 'Category']
-            , colWidths: [30, 20, 30]
-        });
-
-        for (var i = 0; i < numberOfRows; i++) {
-            table.push(
-                [res[i].item_name, res[i].item_cost, res[i].item_category],
-            );
-
-        };
-        console.log(table.toString());
-        // selectForPurchase();
-        selectForPurchaseBothSearches();
-    });
-};
-
-
-function selectForPurchase() {
-    var numberOfRows;
-
-    connection.query(`SELECT COUNT(item_name) AS NumberOfProducts FROM inventory`, function (err, res) {
-        if (err) throw err;
-        // console.log(res[0].NumberOfProducts)
-        numberOfRows = parseInt(res[0].NumberOfProducts);
-        // console.log(numberOfRows);
-    });
-
-    var itemNameArray = [];
-
-    connection.query(
-        // `SELECT ${x} FROM inventory`,
-        `SELECT item_name FROM inventory`,
-
-        function (err, res) {
+            var table = new Table({
+                head: ['Name', 'Cost', 'Category']
+                , colWidths: [30, 20, 30]
+            });
 
             for (var i = 0; i < numberOfRows; i++) {
-                // console.log(res[i].item_name);
-                itemNameArray.push(res[i].item_name);
-            }
-            // connection.end();
-            // console.log(itemNameArray);
+                table.push(
+                    [res[i].item_name, res[i].item_cost, res[i].item_category],
+                );
 
-            inquirer.prompt([
-                {
-                    type: "list",
-                    name: "purchaseItem",
-                    message: "Which item would you like to purchase?",
-                    choices: itemNameArray
-                },
-                {
-                    type: "input",
-                    name: "qtyForPurchase",
-                    message: "Enter the quantity you would like to purchase.",
-                },
-
-            ]).then(function (user) {
-                console.log(user.purchaseItem + "  " + user.qtyForPurchase);
-                // function to check if the items are instock
-                // checkQuantity(item, quantity);
-                checkQuantity(user.purchaseItem, user.qtyForPurchase);
-            });
-        }
-    );
+            };
+            console.log(table.toString());
+            // selectForPurchase();
+            selectForPurchaseBothSearches();
+        });
+    });
 };
 
+
+// function selectForPurchase() {
+//     var numberOfRows;
+
+//     connection.query(`SELECT COUNT(item_name) AS NumberOfProducts FROM inventory`, function (err, res) {
+//         if (err) throw err;
+//         // console.log(res[0].NumberOfProducts)
+//         numberOfRows = parseInt(res[0].NumberOfProducts);
+//         // console.log(numberOfRows);
+//     });
+
+//     var itemNameArray = [];
+
+//     connection.query(
+//         // `SELECT ${x} FROM inventory`,
+//         `SELECT item_name FROM inventory`,
+
+//         function (err, res) {
+
+//             for (var i = 0; i < numberOfRows; i++) {
+//                 // console.log(res[i].item_name);
+//                 itemNameArray.push(res[i].item_name);
+//             }
+//             // connection.end();
+//             // console.log(itemNameArray);
+
+//             inquirer.prompt([
+//                 {
+//                     type: "list",
+//                     name: "purchaseItem",
+//                     message: "Which item would you like to purchase?",
+//                     choices: itemNameArray
+//                 },
+//                 {
+//                     type: "input",
+//                     name: "qtyForPurchase",
+//                     message: "Enter the quantity you would like to purchase.",
+//                 },
+
+//             ]).then(function (user) {
+//                 console.log(user.purchaseItem + "  " + user.qtyForPurchase);
+//                 // function to check if the items are instock
+//                 // checkQuantity(item, quantity);
+//                 checkQuantity(user.purchaseItem, user.qtyForPurchase);
+//             });
+//         }
+//     );
+// };
+
 function checkQuantity(x, y) {
+    var costOfItem;
+    connection.query(
+        `SELECT item_cost AS price FROM inventory WHERE item_name = '${x}'`,
+        function (err, res) {
+            if (err) throw err;
+            costOfItem = res[0].price;
+            console.log(res[0].price);
+        });
+    
+
+
+
     connection.query(
         `SELECT item_quantity FROM inventory WHERE item_name = '${x}'`,
         function (err, res) {
@@ -122,7 +135,7 @@ function checkQuantity(x, y) {
             if ((numberInStock - parseFloat(y)) >= 0) {
                 // console.log("there are enough for you to buy");
                 updateProduct(x, y);
-                makePurchase(x, y);
+                makePurchase(x, y, costOfItem);
 
             } else {
 
@@ -144,7 +157,7 @@ function checkQuantity(x, y) {
                     } else {
                         // console.log("go ahead with purchase");
                         updateProduct(x, numberInStock);
-                        makePurchase(x, numberInStock);
+                        makePurchase(x, numberInStock, costOfItem);
                     }
                 });
             }
@@ -183,17 +196,23 @@ function updateProduct(x, y) {
 };
 
 
-function makePurchase(x, y) {
+function makePurchase(x, y, z) {
     // name is x, quantity is y
+    var totalOrderPrice = parseFloat(y) * parseFloat(z);
+
 
     console.log(chalk.magenta(`
 ${userName},
     Your purchase of ${y} ${x}(s) will be processes
     as soon as possible. Please enter your mailing
     information in the link below.
+
+    The total cost of your order is $${totalOrderPrice}.
     
     Thank You,
-    Bamazon!`));
+    Bamazon!
+    
+    `));
 
     shop();
 
@@ -202,7 +221,7 @@ ${userName},
 
 function shopByCategory() {
     var numberOfRows;
-    // SELECT count( DISTINCT(email) ) FROM orders
+
     connection.query(`SELECT COUNT( DISTINCT(item_category) ) AS NumberOfProducts FROM inventory`, function (err, res) {
         if (err) throw err;
         // console.log(res[0].NumberOfProducts)
@@ -213,7 +232,7 @@ function shopByCategory() {
     var itemCategoryArray = [];
 
     connection.query(
-         `SELECT DISTINCT item_category FROM inventory`,
+        `SELECT DISTINCT item_category FROM inventory`,
         function (err, res) {
             if (err) throw err;
             // console.log(res);
@@ -231,14 +250,11 @@ function shopByCategory() {
                     message: "Which category would you like to shop?",
                     choices: itemCategoryArray,
                 },
-                
+
 
             ]).then(function (user) {
                 // console.log(user.categorySelected);
                 categoryPrintDatabase(user.categorySelected);
-                // function to check if the items are instock
-                // checkQuantity(item, quantity);
-                // checkQuantity(user.purchaseItem, user.qtyForPurchase);
             });
         }
     );
@@ -300,7 +316,7 @@ inquirer.prompt([
     userName = user.customerName;
     userEmail = user.customerEmail;
     // console.log(user.customerName+ "  " + user.customerEmail);
-    console.log(`Welcome ${user.customerName}.`)
+    console.log(chalk.red(`Welcome ${user.customerName}.`));
     shop();
 });
 
@@ -331,19 +347,6 @@ function shop() {
 
     });
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -394,7 +397,7 @@ function selectForPurchaseBothSearches(x) {
                 },
 
             ]).then(function (user) {
-                // console.log(user.purchaseItem + "  " + user.qtyForPurchase);
+                // console.log(user.purchaseItem + "  " + user.qtyForPurchase+ " " + user.);
                 checkQuantity(user.purchaseItem, user.qtyForPurchase);
             });
         }
