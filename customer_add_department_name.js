@@ -30,7 +30,7 @@ var userEmail;
 
 function printDatabase() {
     var numberOfRows;
-    connection.query("SELECT COUNT(id) AS NumberOfProducts FROM inventory", function (err, res) {
+    connection.query("SELECT COUNT(item_id) AS NumberOfProducts FROM inventory", function (err, res) {
         if (err) throw err;
         // console.log(res[0].NumberOfProducts)
         numberOfRows = parseInt(res[0].NumberOfProducts);
@@ -42,12 +42,12 @@ function printDatabase() {
 
             var table = new Table({
                 head: ['Name', 'Cost', 'Category']
-                , colWidths: [30, 20, 30]
+                , colWitem_idths: [30, 20, 30]
             });
 
             for (var i = 0; i < numberOfRows; i++) {
                 table.push(
-                    [res[i].item_name, res[i].item_cost, res[i].item_category],
+                    [res[i].item_name, "$ "+res[i].item_cost, res[i].department_name],
                 );
 
             };
@@ -59,54 +59,6 @@ function printDatabase() {
 };
 
 
-// function selectForPurchase() {
-//     var numberOfRows;
-
-//     connection.query(`SELECT COUNT(item_name) AS NumberOfProducts FROM inventory`, function (err, res) {
-//         if (err) throw err;
-//         // console.log(res[0].NumberOfProducts)
-//         numberOfRows = parseInt(res[0].NumberOfProducts);
-//         // console.log(numberOfRows);
-//     });
-
-//     var itemNameArray = [];
-
-//     connection.query(
-//         // `SELECT ${x} FROM inventory`,
-//         `SELECT item_name FROM inventory`,
-
-//         function (err, res) {
-
-//             for (var i = 0; i < numberOfRows; i++) {
-//                 // console.log(res[i].item_name);
-//                 itemNameArray.push(res[i].item_name);
-//             }
-//             // connection.end();
-//             // console.log(itemNameArray);
-
-//             inquirer.prompt([
-//                 {
-//                     type: "list",
-//                     name: "purchaseItem",
-//                     message: "Which item would you like to purchase?",
-//                     choices: itemNameArray
-//                 },
-//                 {
-//                     type: "input",
-//                     name: "qtyForPurchase",
-//                     message: "Enter the quantity you would like to purchase.",
-//                 },
-
-//             ]).then(function (user) {
-//                 console.log(user.purchaseItem + "  " + user.qtyForPurchase);
-//                 // function to check if the items are instock
-//                 // checkQuantity(item, quantity);
-//                 checkQuantity(user.purchaseItem, user.qtyForPurchase);
-//             });
-//         }
-//     );
-// };
-
 function checkQuantity(x, y) {
     var costOfItem;
     connection.query(
@@ -116,7 +68,6 @@ function checkQuantity(x, y) {
             costOfItem = res[0].price;
             console.log(res[0].price);
         });
-
 
 
 
@@ -219,7 +170,7 @@ ${userName},
 function shopByCategory() {
     var numberOfRows;
 
-    connection.query(`SELECT COUNT( DISTINCT(item_category) ) AS NumberOfProducts FROM inventory`, function (err, res) {
+    connection.query(`SELECT COUNT( DISTINCT(department_name) ) AS NumberOfProducts FROM inventory`, function (err, res) {
         if (err) throw err;
         // console.log(res[0].NumberOfProducts)
         numberOfRows = parseInt(res[0].NumberOfProducts);
@@ -229,14 +180,14 @@ function shopByCategory() {
     var itemCategoryArray = [];
 
     connection.query(
-        `SELECT DISTINCT item_category FROM inventory`,
+        `SELECT DISTINCT department_name FROM inventory`,
         function (err, res) {
             if (err) throw err;
             // console.log(res);
 
             for (var i = 0; i < numberOfRows; i++) {
                 // console.log(res[i].item_name);
-                itemCategoryArray.push(res[i].item_category);
+                itemCategoryArray.push(res[i].department_name);
             };
             // console.log(itemCategoryArray);
 
@@ -261,7 +212,7 @@ function shopByCategory() {
 function categoryPrintDatabase(x) {
     var numberOfRows;
 
-    connection.query(`SELECT COUNT(id) AS NumberOfProducts FROM inventory WHERE item_category = '${x}'`, function (err, res) {
+    connection.query(`SELECT COUNT(item_id) AS NumberOfProducts FROM inventory WHERE department_name = '${x}'`, function (err, res) {
         if (err) throw err;
         numberOfRows = parseInt(res[0].NumberOfProducts);
 
@@ -269,17 +220,17 @@ function categoryPrintDatabase(x) {
     });
 
 
-    connection.query(`SELECT * FROM inventory WHERE item_category = '${x}'`, function (err, res) {
+    connection.query(`SELECT * FROM inventory WHERE department_name = '${x}'`, function (err, res) {
         if (err) throw err;
 
         var table = new Table({
             head: ['Name', 'Cost', 'Category']
-            , colWidths: [30, 20, 30]
+            , colWitem_idths: [30, 20, 30]
         });
 
         for (var i = 0; i < numberOfRows; i++) {
             table.push(
-                [res[i].item_name, res[i].item_cost, res[i].item_category],
+                [res[i].item_name, "$ "+res[i].item_cost, res[i].department_name],
             );
 
         };
@@ -325,7 +276,7 @@ function shop() {
             type: "list",
             name: "searchType",
             message: "Would you like to shop the entire store or by category?",
-            choices: ["Shop entire store.", "Shop by category.", "Exit"]
+            choices: ["Shop entire store.", "Shop by department.", "Exit"]
         },
 
     ]).then(function (user) {
@@ -333,7 +284,7 @@ function shop() {
         if (user.searchType === "Shop entire store.") {
             // function to view entire store
             printDatabase();
-        } else if (user.searchType === "Shop by category.") {
+        } else if (user.searchType === "Shop by department.") {
             // function to select from category
             shopByCategory();
         } else if (user.searchType === "Exit") {
@@ -350,7 +301,7 @@ function shop() {
 function selectForPurchaseBothSearches(x) {
     var where;
     if (x) {
-        where = `WHERE item_category = '${x}'`;
+        where = `WHERE department_name = '${x}'`;
     } else {
         where = '';
     }

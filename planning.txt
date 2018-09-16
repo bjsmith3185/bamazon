@@ -62,3 +62,19 @@ inquier propmpt
         - view low inventory (under 5 items)
         - add to inventory
         - add new product
+
+
+low inventory
+    list items with quantity less than 5
+        - search database for items with quantity lower than 5
+
+
+-------------------------------------------------
+
+to do for executive
+
+    - function to add a department.
+
+    - function to display sales by department.
+
+    

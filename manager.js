@@ -31,6 +31,8 @@ inquirer.prompt([
     // console.log(user.managerOrExecutive)
     if (user.managerOrExecutive === "Manager") {
         managerLogIn();
+    } if( user.managerOrExecutive === "Executive") {
+        executiveLogIn();
     }
 
 });
@@ -49,7 +51,6 @@ function managerLogIn() {
         },
 
     ]).then(function (user) {
-        // console.log(user.managerOrExecutive)
         if (user.managerName && user.managerPassword) {
             managerMenu();
         } else {
@@ -77,7 +78,7 @@ function managerMenu() {
         } else if (user.managerActivity === "View low inventory items") {
             lowInventory();
         } else if (user.managerActivity === "Add new item to inventory") {
-
+            enterNewItem();
         } else if (user.managerActivity === "Modify an item in inventory") {
             modifyInventory();
         } else if (user.managerActivity === "LogOut") {
@@ -105,16 +106,14 @@ function lowInventory() {
 
             for (var i = 0; i < numberOfRows; i++) {
                 table.push(
-                    [res[i].item_name, res[i].item_cost, res[i].item_category, res[i].item_quantity],
+                    [res[i].item_name, "$ "+res[i].item_cost, res[i].item_category, res[i].item_quantity],
                 );
-
             };
             console.log(`${table.toString()}
             
             `);
             managerMenu();
         });
-
     });
 };
 
@@ -135,7 +134,7 @@ function displayAllProducts() {
 
             for (var i = 0; i < numberOfRows; i++) {
                 table.push(
-                    [res[i].item_name, res[i].item_cost, res[i].item_category, res[i].item_quantity],
+                    [res[i].item_name, "$ "+res[i].item_cost, res[i].item_category, res[i].item_quantity],
                 );
             };
             console.log(`${table.toString()}
@@ -202,9 +201,9 @@ function modifyInventory() {
                     var where = `item_name = '${itemToModify}'`;
                     console.log(where);
                     var modified = `item_${itemModified}`;
-                    connection.query(`UPDATE inventory SET ${modified} = ${newValue} WHERE ${where} `,function (err, res) {
+                    connection.query(`UPDATE inventory SET ${modified} = ${newValue} WHERE ${where} `, function (err, res) {
                         if (err) throw err;
-                        
+
                         console.log("should be modified");
                     });
 
@@ -218,75 +217,131 @@ function modifyInventory() {
 };
 
 
-
-// connection.query(`UPDATE inventory SET ${modified} = ${newValue} WHERE ${where} `,function (err, res) {
-//     if (err) throw err;
-    
-// });
-// // connection.query(`UPDATE inventory SET item_cost = .77 WHERE item-name = 'bananas' `)
-
-
-// //----------------------------------
-// var newQty;
-// connection.query(`SELECT item_quantity FROM inventory WHERE ?`,
-//     {
-//         item_name: x
-//     },
-//     function (err, res) {
-//         if (err) throw err;
-//         var currentQty = parseFloat(res[0].item_quantity);
-//         var additionalQty = parseFloat(y);
-//         newQty = currentQty - additionalQty;
-//         connection.query(
-//             "UPDATE inventory SET ? WHERE ?",
-//             [
-//                 {
-//                     item_quantity: newQty
-//                 },
-//                 {
-//                     item_name: x
-//                 }
-//             ],
-//             function (err, res) {
-//                 // console.log(res.affectedRows + "products updated \n");
-//             }
-//         );
-//         // connection.end();
-//     });
-
-
-
-
-
-
 function enterNewItem() {
 
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "itemName",
+            message: "Enter the name of the product.",
+        },
+        {
+            type: "input",
+            name: "itemCategory",
+            message: "Enter the category of the product.",
+        },
+        {
+            type: "input",
+            name: "itemCost",
+            message: "Enter the price of the product.",
+        },
+        {
+            type: "input",
+            name: "itemQuantity",
+            message: "Enter the quantity.",
+        },
+ 
+    ]).then(function (user) {
+        var name = user.itemName;
+        var category = user.itemCategory;
+        var price = user.itemCost;
+        var amount = user.itemQuantity;
 
-    function createProduct() {
-        console.log("inside createProduct \n");
-        var query = connection.query(
-            "INSERT INTO inventory SET ?",
+        console.log(`
+        Your entered the following data:
+        Item: ${name}
+        Category: ${category}
+        Cost: $${price}
+        Quantity: ${amount}
+
+        `);
+
+        inquirer.prompt([
             {
-                item_name: "tv",
-                item_category: "electronics",
-                item_cost: 287.00,
-                item_quantity: 35
+                type: "confirm",
+                name: "saveToDatabase",
+                message: "Is this information correct?",
+                default: true,
             },
+    
+        ]).then(function (user) {
+            
+            if(user.saveToDatabase) {
+                connection.query("INSERT INTO inventory SET ?",
+                {
+                    item_name: name,
+                    item_category: category,
+                    item_cost: price,
+                    item_quantity: amount,
+                },
+                function (err, res) {
+                    console.log("product added")
+                    managerMenu();
+                }
+            );
 
-            function (err, res) {
-                // console.log("!!!!!!")
-                // console.log(res)
-                console.log(res.affectedRows + " row inserted. \n");
-                // updateProduct();
+            } else {
+                // information enter is incorrect
+                console.log(chalk.red("Pleae re-enter the product information."))
+                enterNewItem();
+            };
+        });
+    });
+};
 
-                // afterConnection();
-                // connection.end();
-            }
 
-        );
-        // afterConnection();
-        // console.log(query.sql);
-        connection.end();
-    };
 
-}
+
+
+function executiveLogIn() {
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "executiveName",
+            message: "Enter your name.",
+        },
+        {
+            type: "input",
+            name: "executivePassword",
+            message: "Enter your password.",
+        },
+
+    ]).then(function (user) {
+        if (user.executiveName && user.executivePassword) {
+            executiveMenu();
+        } else {
+            console.log("Enter a valid name and password")
+            executiveLogIn();
+        }
+    });
+};
+
+
+function executiveMenu() {
+
+    inquirer.prompt([
+        {
+            type: "list",
+            name: "executiveActivity",
+            message: "Select the operation to execute.",
+            choices: ["View all products", "View low inventory items", "Add new item to inventory", "Modify an item in inventory", "LogOut"]
+        },
+
+    ]).then(function (user) {
+        console.log(user.executiveActivity);
+
+        if (user.executiveActivity === "View all products") {
+            displayAllProducts();
+        } else if (user.executiveActivity === "View low inventory items") {
+            lowInventory();
+        } else if (user.executiveActivity === "Add new item to inventory") {
+            enterNewItem();
+        } else if (user.executiveActivity === "Modify an item in inventory") {
+            modifyInventory();
+        } else if (user.executiveActivity === "LogOut") {
+            console.log(chalk.yellow("Exiting Program"))
+            connection.end();
+        }
+    });
+
+};
