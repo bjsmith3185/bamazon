@@ -100,7 +100,7 @@ function lowInventory() {
             if (err) throw err;
 
             var table = new Table({
-                head: ['Name', 'Cost', 'Category', 'quantity']
+                head: ['Name', 'Cost', 'Department', 'quantity']
                 , colWidths: [30, 20, 30, 10]
             });
 
@@ -128,7 +128,7 @@ function displayAllProducts() {
             if (err) throw err;
 
             var table = new Table({
-                head: ['Name', 'Cost', 'Category', 'Quantity']
+                head: ['Name', 'Cost', 'Department', 'Quantity']
                 , colWidths: [30, 20, 30, 10]
             });
 
@@ -189,36 +189,28 @@ function modifyInventory() {
                     {
                         type: "input",
                         name: "newValue",
-                        message: "Enter the new value you would like to modify",
+                        message: "Enter the updated value",
                     },
 
                 ]).then(function (user) {
                     itemModified = user.toModify;
-                    newValue = user.newValue;
+                    newValue = `'${user.newValue}'`;
                     var where = `item_name = '${itemToModify}'`;
-                    console.log(where);
+                    // console.log(where);
                     var modified = `item_${itemModified}`;
 
                     if(user.toModify === "department") {
                         modified = 'department_name';
                     };
 
-
-                    
-                    // console.log(`name ${itemToModify}  element ${itemModified}  newvalue ${newValue}`);
-
-                   
-                  
-                   
+                    // console.log(`UPDATE inventory SET ${modified} = ${newValue} WHERE ${where} `);
+                                //  UPDATE inventory SET department_name = food WHERE item_name = 'bananas'
                     connection.query(`UPDATE inventory SET ${modified} = ${newValue} WHERE ${where} `, function (err, res) {
                         if (err) throw err;
 
                         console.log("should be modified");
+                        managerMenu();
                     });
-
-
-
-
                 });
             });
         }
@@ -259,7 +251,7 @@ function enterNewItem() {
         console.log(`
         Your entered the following data:
         Item: ${name}
-        Category: ${category}
+        Department: ${category}
         Cost: $${price}
         Quantity: ${amount}
 
@@ -301,56 +293,3 @@ function enterNewItem() {
 
 
 
-
-function executiveLogIn() {
-    inquirer.prompt([
-        {
-            type: "input",
-            name: "executiveName",
-            message: "Enter your name.",
-        },
-        {
-            type: "input",
-            name: "executivePassword",
-            message: "Enter your password.",
-        },
-
-    ]).then(function (user) {
-        if (user.executiveName && user.executivePassword) {
-            executiveMenu();
-        } else {
-            console.log("Enter a valid name and password")
-            executiveLogIn();
-        }
-    });
-};
-
-
-function executiveMenu() {
-
-    inquirer.prompt([
-        {
-            type: "list",
-            name: "executiveActivity",
-            message: "Select the operation to execute.",
-            choices: ["View all products", "View low inventory items", "Add new item to inventory", "Modify an item in inventory", "LogOut"]
-        },
-
-    ]).then(function (user) {
-        console.log(user.executiveActivity);
-
-        if (user.executiveActivity === "View all products") {
-            displayAllProducts();
-        } else if (user.executiveActivity === "View low inventory items") {
-            lowInventory();
-        } else if (user.executiveActivity === "Add new item to inventory") {
-            enterNewItem();
-        } else if (user.executiveActivity === "Modify an item in inventory") {
-            modifyInventory();
-        } else if (user.executiveActivity === "LogOut") {
-            console.log(chalk.yellow("Exiting Program"))
-            connection.end();
-        }
-    });
-
-};

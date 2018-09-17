@@ -345,3 +345,86 @@ function selectForPurchaseBothSearches(x) {
         }
     );
 };
+
+
+
+
+
+
+// function collectUserData() {
+//     console.log("Pleae enter your information below to continue with your order.");
+
+//     inquirer.prompt([
+//         {
+//             type: "input",
+//             name: "firstName",
+//             message: "Enter your first name.",
+//         },
+//         {
+//             type: "input",
+//             name: "lastName",
+//             message: "Enter your last name.",
+//         },
+//         {
+//             type: "input",
+//             name: "address",
+//             message: "Enter your street address.",
+//         },
+//         {
+//             type: "input",
+//             name: "city",
+//             message: "Enter city.",
+//         },
+//         {
+//             type: "input",
+//             name: "state",
+//             message: "Enter state.",
+//         },
+//         {
+//             type: "input",
+//             name: "zipcode",
+//             message: "Enter zipcode.",
+//         },
+//         {
+//             type: "input",
+//             name: "email",
+//             message: "Enter your email.",
+//         },
+//         {
+//             type: "input",
+//             name: "phone",
+//             message: "Enter your phone number.",
+//         },
+        
+//     ]).then(function (user) {
+
+//         console.log(`
+//         Name: ${user.firstName} ${user.lastName}
+//         Address: ${user.address}
+//         City: ${user.city} State: ${user.state} Zip: ${user.zipcode}
+//         Email: ${user.email}
+//         Phone: ${user.phone}
+        
+//         `);
+
+//         inquirer.prompt([
+//             {
+//                 type: "confirm",
+//                 name: "confirm",
+//                 message: "Is this information correct?",
+//             },
+//         ]).then(function (user) {
+//             console.log(user.confirm);
+          
+    
+//         });
+       
+
+//     });
+
+
+
+// };
+
+
+// collectUserData() 

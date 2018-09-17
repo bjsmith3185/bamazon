@@ -77,4 +77,26 @@ to do for executive
 
     - function to display sales by department.
 
-    
+-------------------------------------------------
+
+database for users
+
+customer_db
+
+cust_id, cust_first, cust_last, cust_address, cust_city, cust_state, cust_zip, cust_email, cust_phone, order_id
+
+
+
+order_db
+
+cust_id, order_id, order_procuct, order_quantity, order_cost
+
+
+
+---------------------------------------------------------
+
+collectdata()
+    gets the users mailing info
+    push data to database
+       makepurchase()
+
