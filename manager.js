@@ -91,7 +91,7 @@ function managerMenu() {
 function lowInventory() {
     var numberOfRows;
 
-    connection.query(`SELECT COUNT(id) AS NumberOfProducts FROM inventory WHERE item_quantity < 5`, function (err, res) {
+    connection.query(`SELECT COUNT(item_id) AS NumberOfProducts FROM inventory WHERE item_quantity < 5`, function (err, res) {
         if (err) throw err;
 
         numberOfRows = parseInt(res[0].NumberOfProducts);
@@ -106,7 +106,7 @@ function lowInventory() {
 
             for (var i = 0; i < numberOfRows; i++) {
                 table.push(
-                    [res[i].item_name, "$ "+res[i].item_cost, res[i].item_category, res[i].item_quantity],
+                    [res[i].item_name, "$ "+res[i].item_cost, res[i].department_name, res[i].item_quantity],
                 );
             };
             console.log(`${table.toString()}
@@ -120,7 +120,7 @@ function lowInventory() {
 
 function displayAllProducts() {
     var numberOfRows;
-    connection.query("SELECT COUNT(id) AS NumberOfProducts FROM inventory", function (err, res) {
+    connection.query("SELECT COUNT(item_id) AS NumberOfProducts FROM inventory", function (err, res) {
         if (err) throw err;
         numberOfRows = parseInt(res[0].NumberOfProducts);
 
@@ -134,7 +134,7 @@ function displayAllProducts() {
 
             for (var i = 0; i < numberOfRows; i++) {
                 table.push(
-                    [res[i].item_name, "$ "+res[i].item_cost, res[i].item_category, res[i].item_quantity],
+                    [res[i].item_name, "$ "+res[i].item_cost, res[i].department_name, res[i].item_quantity],
                 );
             };
             console.log(`${table.toString()}
@@ -184,7 +184,7 @@ function modifyInventory() {
                         type: "list",
                         name: "toModify",
                         message: "What value would you like to modify.",
-                        choices: ["name", "category", "cost", "quantity"]
+                        choices: ["name", "department", "cost", "quantity"]
                     },
                     {
                         type: "input",
@@ -195,12 +195,21 @@ function modifyInventory() {
                 ]).then(function (user) {
                     itemModified = user.toModify;
                     newValue = user.newValue;
-
-                    // console.log(`name ${itemToModify}  element ${itemModified}  newvalue ${newValue}`);
-
                     var where = `item_name = '${itemToModify}'`;
                     console.log(where);
                     var modified = `item_${itemModified}`;
+
+                    if(user.toModify === "department") {
+                        modified = 'department_name';
+                    };
+
+
+                    
+                    // console.log(`name ${itemToModify}  element ${itemModified}  newvalue ${newValue}`);
+
+                   
+                  
+                   
                     connection.query(`UPDATE inventory SET ${modified} = ${newValue} WHERE ${where} `, function (err, res) {
                         if (err) throw err;
 
@@ -270,7 +279,7 @@ function enterNewItem() {
                 connection.query("INSERT INTO inventory SET ?",
                 {
                     item_name: name,
-                    item_category: category,
+                    department_name: category,
                     item_cost: price,
                     item_quantity: amount,
                 },

@@ -242,12 +242,6 @@ function categoryPrintDatabase(x) {
 
 
 
-
-
-
-
-
-
 inquirer.prompt([
     {
         type: "input",
