@@ -16,31 +16,8 @@ connection.connect(function (err) {
 
 });
 
-var userName;
-var userEmail;
 
-function welcomeUser() {
-    inquirer.prompt([
-        {
-            type: "input",
-            name: "customerName",
-            message: "Enter your name.",
-        },
-        {
-            type: "input",
-            name: "customerEmail",
-            message: "Enter your email.",
-        },
-
-    ]).then(function (user) {
-        userName = user.customerName;
-        userEmail = user.customerEmail;
-        console.log(chalk.red(`Welcome ${user.customerName}.`));
-        shop();
-    });
-};
-
-welcomeUser();
+shop();
 
 function shop() {
     inquirer.prompt([
@@ -178,7 +155,7 @@ function checkQuantity(x, y) {
         function (err, res) {
             if (err) throw err;
             costOfItem = res[0].price;
-            console.log(res[0].price);
+            // console.log(res[0].price);
         });
 
     connection.query(
@@ -207,7 +184,8 @@ function checkQuantity(x, y) {
                         shop();
                     } else {
                         updateProduct(x, numberInStock);
-                        makePurchase(x, numberInStock, costOfItem);
+                        // makePurchase(x, numberInStock, costOfItem);
+                        collectUserData(x, numberInStock, costOfItem);
                     }
                 });
             }
@@ -245,29 +223,6 @@ function updateProduct(x, y) {
 };
 
 
-// function makePurchase(x, y, z) {
-//     var totalOrderPrice = parseFloat(y) * parseFloat(z);
-
-//     connection.query(`UPDATE inventory SET item_sales = ${totalOrderPrice} WHERE item_name = '${x}' `, function (err, res) {
-//         if (err) throw err;
-
-//         console.log(chalk.magenta(`
-// ${userName},
-//     Your purchase of ${y} ${x}(s) will be processes
-//     as soon as possible. Please enter your mailing
-//     information in the link below.
-
-//     The total cost of your order is $${totalOrderPrice}.
-
-//     Thank You,
-//     Bamazon!
-
-//     `));
-//         shop();
-//     });
-// };
-
-
 function categoryPrintDatabase(x) {
     var numberOfRows;
 
@@ -296,24 +251,21 @@ function categoryPrintDatabase(x) {
 };
 
 
-
-
-function makePurchase(x, y, z) {
-    // x = item purchased 
-    // y = quantity
-    // z = cost per unit.
-
-
-    var totalOrderPrice = parseFloat(y) * parseFloat(z);
-
-    connection.query(`UPDATE inventory SET item_sales = ${totalOrderPrice} WHERE item_name = '${x}' `, function (err, res) {
-        if (err) throw err;
+function receipt(first, last, order, address, city, state, zip, email, phone, totalOrderPrice, qty, product) {
 
         console.log(chalk.magenta(`
-${userName},
-    Your purchase of ${y} ${x}(s) will be processes
-    as soon as possible. Please enter your mailing
-    information in the link below.
+${first},                           Order # ${order}
+
+    Your purchase of ${qty} ${product}(s) will be processes
+    as soon as possible. Your order will be shipped
+    to the address below.
+
+    ${first} ${last}
+    ${address}
+    ${city}  ${state}  ${zip}
+
+    Email: ${email}
+    Phone: ${phone}
 
     The total cost of your order is $${totalOrderPrice}.
     
@@ -322,14 +274,12 @@ ${userName},
     
     `));
         shop();
-    });
 };
 
 
 function collectUserData(x, y, z) {
-    // x = item purchased 
-    // y = quantity
-    // z = cost per unit.
+    var totalCost = (parseFloat(y) * parseFloat(z));
+
     console.log("Pleae enter your information below to continue with your order.");
 
     inquirer.prompt([
@@ -388,7 +338,7 @@ function collectUserData(x, y, z) {
         console.log(`
         Name: ${user.firstName} ${user.lastName}
         Address: ${user.address}
-        City: ${user.city} State: ${user.state} Zip: ${user.zipcode}
+        City: ${user.city},  State: ${user.state},  Zip: ${user.zipcode}
         Email: ${user.email}
         Phone: ${user.phone}
         
@@ -401,10 +351,7 @@ function collectUserData(x, y, z) {
                 message: "Is this information correct?",
             },
         ]).then(function (user) {
-            console.log(user.confirm);
-
-            if (user.confirm) {
-                // push to database
+                if (user.confirm) {
                 connection.query("INSERT INTO customers SET ?",
                     {
                         cust_first: first,
@@ -415,57 +362,43 @@ function collectUserData(x, y, z) {
                         cust_zip: zip,
                         cust_email: email,
                         cust_phone: phone,
-                        // order_id: 
-
                     },
                     function (err, res) {
-                        console.log("customer into sent to database")
-                            // get customer_id from database 
-                            // use this below; then use the cust_id recieved to send with orders push
-                            `SELECT cust_id FROM customers WHERE cust_first = '${first}' AND cust_last = '${last}}'`;
-
-
-                        connection.query(`SELECT cust_id AS custID FROM customers WHERE cust_first = '${first}' AND cust_last = '${last}}'`,
+                     
+                        connection.query(`SELECT cust_id AS custID FROM customers WHERE (cust_first = '${first}' AND cust_last = '${last}')`,
                             function (err, res) {
-                                console.log(res.custID);
+                                console.log(res[0].custID);
+                                var order = res[0].custID;
+                               
+                                connection.query("INSERT INTO orders SET ?",
+                                    {
+                                        cust_id: res[0].custID,
+                                        order_product: x,
+                                        order_quantity: y,
+                                        order_cost: z,
+                                        order_totalCost: totalCost,
+                                    },
+                                    function (err, res) {
+  
+                                        receipt(first, last, order, address, city, state, zip, email, phone, totalCost, y, x);
 
 
+                                    } // end of third push to database 
+                                ); // end of third query
 
-
-                            }
-                        );
-
-                    }
-                );
-
+                            } // end of second push to database 
+                        );  // end of second query
+                    }  // end of first push to database
+                ); // end of first query 
             } else {
                 console.log("Pleae re-enter your information.")
                 collectUserData();
-            }
-        });
-    });
+                };
+
+
+            }); // end of second inquirer 
+
+    }); // end of first inquirer
 };
 
 
-collectUserData();
-
-
-function saveOrderData() {
-
-    connection.query("INSERT INTO orders SET ?",
-        {
-            cust_id:
-                order_product:
-            order_quantity:
-                order_cost:
-            order_totalCost: 
-                },
-        function (err, res) {
-            console.log("order info sent to database")
-
-
-
-        }
-    );
-
-};

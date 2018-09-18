@@ -1,5 +1,18 @@
 
 
+
+to fix;
+
+    - when inventory is 0,
+        - dont display in the shopping list
+
+    - 
+
+
+
+
+
+-------------------------------------------------
 from console
 - update product
     - select product name to update
