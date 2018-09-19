@@ -7,7 +7,7 @@ var connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
     user: "root",
-    password: "December25",
+    password: "root",
     database: "records_db"
 });
 
@@ -25,7 +25,9 @@ connection.connect(function (err) {
 signIn();
 
 function signIn() {
-    console.log(chalk.yellow("              Welcome to Bamazon.com"))
+    console.log(chalk.yellow(`
+                  Welcome to Bamazon.com
+                  `))
     inquirer.prompt([
         {
             type: "list",
