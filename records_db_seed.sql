@@ -51,17 +51,17 @@ CREATE TABLE customers (
     cust_zip INT(20) NOT NULL,
     cust_email  VARCHAR(45) NOT NULL, 
     cust_phone  INT(20) NOT NULL,
-    order_id   INT(20),
     PRIMARY KEY (cust_id)
   );
 
 
 CREATE TABLE orders (
-	order_id INT NOT NULL AUTO_INCREMENT,
-	cust_id VARCHAR(45) NOT NULL,
-    order_product VARCHAR(45) NOT NULL,
-	order_quantity INT(20) NOT NULL,
-    order_cost INT(20) NOT NULL,
+	  order_id INT NOT NULL AUTO_INCREMENT,
+	  cust_id VARCHAR(45) ,
+    order_product VARCHAR(45) ,
+	  order_quantity VARCHAR(20) ,
+    order_cost VARCHAR(20) ,
+    order_totalCost VARCHAR(20) ,
     PRIMARY KEY (order_id)
   );
 

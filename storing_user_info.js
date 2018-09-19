@@ -11,13 +11,107 @@ var connection = mysql.createConnection({
     database: "records_db"
 });
 
+var loggedIn = false;
+var accountID;
+
+
+
+
 connection.connect(function (err) {
     if (err) throw err;
 
 });
 
 
-shop();
+// shop();
+signIn();
+function signIn() {
+    console.log(chalk.yellow("              Welcome to Bamazon.com"))
+    inquirer.prompt([
+        {
+            type: "list",
+            name: "login",
+            message: "Sign in or shop as a guest?",
+            choices: ["Sign In.", "Shop as a guest.", "Exit"]
+        },
+
+    ]).then(function (user) {
+        if (user.login === "Sign In.") {
+            findUserAccount()
+        } else if (user.login === "Shop as a guest.") {
+            shop();
+        } else if (user.login === "Exit") {
+            console.log(chalk.yellow("Exiting Program"))
+            connection.end();
+        }
+    });
+};
+
+
+function findUserAccount() {
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "name",
+            message: "Please enter your first name.",
+        },
+        {
+            type: "input",
+            name: "email",
+            message: "Please enter your email to locate your account.",
+        },
+
+    ]).then(function (user) {
+        var findName = user.name;
+        var findEmail = user.email;
+        console.log(findName + "  " + findEmail);
+        // `SELECT cust_first, cust_last, cust_id FROM customers WHERE (cust_first = '${findName}' AND cust_email = '${findEmail}')`
+
+        connection.query(`SELECT cust_first, cust_last, cust_id FROM customers WHERE (cust_first = '${findName}' AND cust_email = '${findEmail}')`,
+            function (err, res) {
+                if (err) throw err;
+                //    console.log(res);
+
+                if (res[0]) {
+                    console.log("its there")
+                    if (res[0].cust_first === findName) {
+                        console.log("sign in successful");
+                        loggedIn = true;
+                        var accountLastName = res[0].cust_last;
+                        accountID = res[0].cust_id;
+                        var accountFirstName = res[0].cust_first;
+
+                        console.log(chalk.magenta(`
+                        Welcome back ${accountFirstName} ${accountLastName}!
+                        
+                        `));
+                        shop();
+
+                    } else {
+                        console.log("couldnt find information.")
+                        signIn();
+                    }
+
+                } else {
+                    console.log("The information you entered was incorrect, please enter your information again.");
+                    signIn();
+                }
+
+
+
+
+
+
+
+
+
+
+            })
+    });
+}
+
+
+
 
 function shop() {
     inquirer.prompt([
@@ -168,7 +262,16 @@ function checkQuantity(x, y) {
             if ((numberInStock - parseFloat(y)) >= 0) {
                 updateProduct(x, y);
                 // makePurchase(x, y, costOfItem);
-                collectUserData(x, y, costOfItem);
+                // collectUserData(x, y, costOfItem);
+                if (loggedIn) {
+                    // function to complete order with saved user info
+                    checkoutLoggedIn(x, numberInStock, costOfItem);
+
+                } else {
+                    collectUserData(x, numberInStock, costOfItem);
+                }
+
+
             } else {
 
                 inquirer.prompt([
@@ -184,8 +287,19 @@ function checkQuantity(x, y) {
                         shop();
                     } else {
                         updateProduct(x, numberInStock);
-                        // makePurchase(x, numberInStock, costOfItem);
-                        collectUserData(x, numberInStock, costOfItem);
+                        console.log(loggedIn);
+                        //   if statement to see if they are logged on or not
+                        if (loggedIn) {
+                            // function to complete order with saved user info
+                            checkoutLoggedIn(x, numberInStock, costOfItem);
+
+
+
+                        } else {
+                            collectUserData(x, numberInStock, costOfItem);
+                        }
+
+
                     }
                 });
             }
@@ -251,10 +365,11 @@ function categoryPrintDatabase(x) {
 };
 
 
-function receipt(first, last, order, address, city, state, zip, email, phone, totalOrderPrice, qty, product) {
+function receipt(first, last, cid, order, address, city, state, zip, email, phone, totalOrderPrice, qty, product) {
 
-        console.log(chalk.magenta(`
-${first},                           Order # ${order}
+    console.log(chalk.magenta(`
+    ${first},                           Order # ${order}
+                                    Cust # ${cid}
 
     Your purchase of ${qty} ${product}(s) will be processes
     as soon as possible. Your order will be shipped
@@ -273,7 +388,7 @@ ${first},                           Order # ${order}
     Bamazon!
     
     `));
-        shop();
+    shop();
 };
 
 
@@ -351,7 +466,7 @@ function collectUserData(x, y, z) {
                 message: "Is this information correct?",
             },
         ]).then(function (user) {
-                if (user.confirm) {
+            if (user.confirm) {
                 connection.query("INSERT INTO customers SET ?",
                     {
                         cust_first: first,
@@ -364,12 +479,12 @@ function collectUserData(x, y, z) {
                         cust_phone: phone,
                     },
                     function (err, res) {
-                     
+
                         connection.query(`SELECT cust_id AS custID FROM customers WHERE (cust_first = '${first}' AND cust_last = '${last}')`,
                             function (err, res) {
                                 console.log(res[0].custID);
-                                var order = res[0].custID;
-                               
+                                var custrID = res[0].custID;
+
                                 connection.query("INSERT INTO orders SET ?",
                                     {
                                         cust_id: res[0].custID,
@@ -379,8 +494,20 @@ function collectUserData(x, y, z) {
                                         order_totalCost: totalCost,
                                     },
                                     function (err, res) {
-  
-                                        receipt(first, last, order, address, city, state, zip, email, phone, totalCost, y, x);
+
+                                        connection.query(`SELECT order_id FROM orders WHERE (cust_id = '${custrID}' AND order_product = '${x}')`,
+                                            
+                                            function (err, res) {
+                                                console.log(res[0].order_id)
+
+
+                                                receipt(first, last, custrID, res[0].order_id, address, city, state, zip, email, phone, totalCost, y, x);
+
+
+                                            } // end of third push to database 
+                                        ); // end of third query
+
+                                        // receipt(first, last, cid, order, address, city, state, zip, email, phone, totalCost, y, x);
 
 
                                     } // end of third push to database 
@@ -393,12 +520,190 @@ function collectUserData(x, y, z) {
             } else {
                 console.log("Pleae re-enter your information.")
                 collectUserData();
-                };
+            };
 
 
-            }); // end of second inquirer 
+        }); // end of second inquirer 
 
     }); // end of first inquirer
 };
 
 
+
+
+function checkoutLoggedIn(x, numberInStock, costOfItem) {
+    var totalCost = (parseFloat(numberInStock) * parseFloat(costOfItem));
+    console.log("inside checkoutLoggedIn()")
+    connection.query(`SELECT * FROM customers WHERE cust_id = '${accountID}'`,
+        function (err, res) {
+            if (err) throw err;
+            console.log(res);
+
+            var customerID = res[0].cust_id;
+            var first = res[0].cust_first;
+            var last = res[0].cust_last;
+            var address = res[0].cust_address;
+            var city = res[0].cust_city;
+            var state = res[0].cust_state;
+            var zip = res[0].cust_zip;
+            var email = res[0].cust_email;
+            var phone = res[0].cust_phone;
+
+            connection.query("INSERT INTO orders SET ?",
+                {
+                    cust_id: customerID,
+                    order_product: x,
+                    order_quantity: numberInStock,
+                    order_cost: costOfItem,
+                    order_totalCost: totalCost,
+                },
+                function (err, res) {
+                    connection.query(`SELECT order_id FROM orders WHERE (cust_id = '${customerID}' AND order_product = '${x}')`,
+                                            
+                    function (err, res) {
+                        console.log(res[0].order_id)
+
+
+                        receipt(first, last, customerID, res[0].order_id, address, city, state, zip, email, phone, totalCost, numberInStock, costOfItem);
+
+
+
+                        // console.log("sent order to database")
+                        // receipt(first, last, customerID, order, address, city, state, zip, email, phone, totalCost, numberInStock, costOfItem);
+
+                    } // end of third push to database 
+                ); // end of third query
+
+                   
+
+
+                } // end of third push to database 
+            ); // end of third query
+        })
+
+}
+
+
+// function checkoutLoggedIn(x, y, z) {
+//     var totalCost = (parseFloat(y) * parseFloat(z));
+
+//     console.log("Pleae enter your information below to continue with your order.");
+
+//     inquirer.prompt([
+//         {
+//             type: "input",
+//             name: "firstName",
+//             message: "Enter your first name.",
+//         },
+//         {
+//             type: "input",
+//             name: "lastName",
+//             message: "Enter your last name.",
+//         },
+//         {
+//             type: "input",
+//             name: "address",
+//             message: "Enter your street address.",
+//         },
+//         {
+//             type: "input",
+//             name: "city",
+//             message: "Enter city.",
+//         },
+//         {
+//             type: "input",
+//             name: "state",
+//             message: "Enter state.",
+//         },
+//         {
+//             type: "input",
+//             name: "zipcode",
+//             message: "Enter zipcode.",
+//         },
+//         {
+//             type: "input",
+//             name: "email",
+//             message: "Enter your email.",
+//         },
+//         {
+//             type: "input",
+//             name: "phone",
+//             message: "Enter your phone number.",
+//         },
+
+//     ]).then(function (user) {
+//         var first = user.firstName;
+//         var last = user.lastName;
+//         var address = user.address;
+//         var city = user.city;
+//         var state = user.state;
+//         var zip = user.zipcode;
+//         var email = user.email;
+//         var phone = user.phone;
+
+
+//         console.log(`
+//         Name: ${user.firstName} ${user.lastName}
+//         Address: ${user.address}
+//         City: ${user.city},  State: ${user.state},  Zip: ${user.zipcode}
+//         Email: ${user.email}
+//         Phone: ${user.phone}
+
+//         `);
+
+//         inquirer.prompt([
+//             {
+//                 type: "confirm",
+//                 name: "confirm",
+//                 message: "Is this information correct?",
+//             },
+//         ]).then(function (user) {
+//             if (user.confirm) {
+//                 connection.query("INSERT INTO customers SET ?",
+//                     {
+//                         cust_first: first,
+//                         cust_last: last,
+//                         cust_address: address,
+//                         cust_city: city,
+//                         cust_state: state,
+//                         cust_zip: zip,
+//                         cust_email: email,
+//                         cust_phone: phone,
+//                     },
+//                     function (err, res) {
+
+//                         connection.query(`SELECT cust_id AS custID FROM customers WHERE (cust_first = '${first}' AND cust_last = '${last}')`,
+//                             function (err, res) {
+//                                 console.log(res[0].custID);
+//                                 var order = res[0].custID;
+
+//                                 connection.query("INSERT INTO orders SET ?",
+//                                     {
+//                                         cust_id: res[0].custID,
+//                                         order_product: x,
+//                                         order_quantity: y,
+//                                         order_cost: z,
+//                                         order_totalCost: totalCost,
+//                                     },
+//                                     function (err, res) {
+
+//                                         receipt(first, last, order, address, city, state, zip, email, phone, totalCost, y, x);
+
+
+//                                     } // end of third push to database 
+//                                 ); // end of third query
+
+//                             } // end of second push to database 
+//                         );  // end of second query
+//                     }  // end of first push to database
+//                 ); // end of first query 
+//             } else {
+//                 console.log("Pleae re-enter your information.")
+//                 collectUserData();
+//             };
+
+
+//         }); // end of second inquirer 
+
+//     }); // end of first inquirer
+// };
