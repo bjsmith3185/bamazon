@@ -19,23 +19,23 @@ connection.connect(function (err) {
 });
 
 
-inquirer.prompt([
-    {
-        type: "list",
-        name: "managerOrExecutive",
-        message: "Select your position.",
-        choices: ["Manager", "Executive"]
-    },
+// inquirer.prompt([
+//     {
+//         type: "list",
+//         name: "managerOrExecutive",
+//         message: "Select your position.",
+//         choices: ["Manager", "Executive"]
+//     },
 
-]).then(function (user) {
-    // console.log(user.managerOrExecutive)
-    if (user.managerOrExecutive === "Manager") {
-        managerLogIn();
-    } if (user.managerOrExecutive === "Executive") {
-        executiveLogIn();
-    }
+// ]).then(function (user) {
+//     // console.log(user.managerOrExecutive)
+//     if (user.managerOrExecutive === "Manager") {
+//         managerLogIn();
+//     } if (user.managerOrExecutive === "Executive") {
+//         executiveLogIn();
+//     }
 
-});
+// });
 
 
 function enterNewDepartment() {
@@ -51,10 +51,10 @@ function enterNewDepartment() {
             name: "overhead",
             message: "Enter the total over-head amount.",
         },
-        
+
     ]).then(function (user) {
-       var newDepartmentName = user.departmentName;
-       var overHead = user.overhead;
+        var newDepartmentName = user.departmentName;
+        var overHead = user.overhead;
         inquirer.prompt([
             {
                 type: "confirm",
@@ -261,4 +261,161 @@ function financialDepartmentSearch() {
         }
     );
 
+};
+
+
+// new functions added to exectuive();
+
+
+updateManagers();
+
+
+function updateManagers() {
+    inquirer.prompt([
+        {
+            type: "list",
+            name: "update",
+            message: "Select from the list below.",
+            choices: ["Add new Manager", "Delete Manager", "Update Manager Information", "Exit"]
+        },
+
+    ]).then(function (user) {
+
+        if (user.update === "Add new Manager") {
+            addNewManager();
+        } else if (user.update === "Delete Manager") {
+            deleteManager();
+        } else if (user.update === "Update Manager Information") {
+
+        } else if (user.update === "Exit") {
+
+        };
+    });
+};
+
+
+function addNewManager() {
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "newFirst",
+            message: "Enter the managers first name.",
+        },
+        {
+            type: "input",
+            name: "newLast",
+            message: "Enter the managers last name.",
+        },
+        {
+            type: "input",
+            name: "newdept",
+            message: "Enter the managers department.",
+        },
+
+    ]).then(function (user) {
+
+        var mfirst = user.newFirst;
+        var mlast = user.newLast;
+        var mdept = user.newdept;
+
+
+        console.log(chalk.magenta(`
+       You entered the following information:
+       New Manager: ${mfirst} ${mlast}.
+       Department: ${mdept}.
+       
+       `));
+
+        inquirer.prompt([
+            {
+                type: "confirm",
+                name: "confirm",
+                message: "Is this information correct?",
+            },
+
+        ]).then(function (user) {
+
+            if (user.confirm) {
+                // push to database
+                connection.query("INSERT INTO managers SET ?",
+                    {
+                        manager_first: mfirst,
+                        manager_last: mlast,
+                        manager_department: mdept,
+                        manager_password: 1234,
+                    },
+                    function (err, res) {
+                        if (err) throw err;
+                        console.log(chalk.yellow("Manager added to Database"));
+                        executiveMenu();
+                    }
+                );
+
+            } else {
+                addNewManager();
+            }
+        });
+    });
+};
+
+function deleteManager() {
+    var numberOfRows;
+
+    connection.query(`SELECT COUNT(manager_last) AS NumberOfProducts FROM managers`, function (err, res) {
+        if (err) throw err;
+
+        numberOfRows = parseInt(res[0].NumberOfProducts);
+    });
+
+    var managerArray = [];
+
+    connection.query(
+        `SELECT manager_last FROM managers`,
+        function (err, res) {
+            if (err) throw err;
+
+            for (var i = 0; i < numberOfRows; i++) {
+                managerArray.push(res[i].manager_last);
+            };
+
+            inquirer.prompt([
+                {
+                    type: "list",
+                    name: "managerSelected",
+                    message: "Which manager would you like to select?",
+                    choices: managerArray,
+                },
+
+            ]).then(function (user) {
+                var deleteManager = user.managerSelected;
+
+                connection.query(`SELECT manager_first FROM managers WHERE manager_last = '${deleteManager}' `,
+                    function (err, res) {
+                        if (err) throw err;
+                        console.log(chalk.red(`Is the manager you would like to delete? ${res[0].manager_first} ${deleteManager}`));
+
+                        inquirer.prompt([
+                            {
+                                type: "confirm",
+                                name: "confirm",
+                                message: "Is this the manager you would like to delete?",
+                            },
+
+                        ]).then(function (user) {
+                            if (user.confirm) {
+
+                                connection.query(`DELETE FROM managers WHERE manager_last = '${deleteManager}'`,
+                                    function (err, res) {
+
+                                        console.log("manager deleted");
+                                        updateManagers();
+                                    });
+                            } else {
+                                deleteManager();
+                            };
+                        });
+                    })
+            });
+        }
+    );
 };

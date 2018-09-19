@@ -3,10 +3,18 @@
 
 to fix;
 
-    - when inventory is 0,
-        - dont display in the shopping list
+      - manager
+        - create a reorder function if inventory is low 
 
-    - 
+
+    create a manager table
+
+    manager_id
+    manager_first
+    manager_last
+    manager_password
+
+        
 
 
 
