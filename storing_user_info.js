@@ -65,8 +65,6 @@ function findUserAccount() {
     ]).then(function (user) {
         var findName = user.name;
         var findEmail = user.email;
-        console.log(findName + "  " + findEmail);
-        // `SELECT cust_first, cust_last, cust_id FROM customers WHERE (cust_first = '${findName}' AND cust_email = '${findEmail}')`
 
         connection.query(`SELECT cust_first, cust_last, cust_id FROM customers WHERE (cust_first = '${findName}' AND cust_email = '${findEmail}')`,
             function (err, res) {
@@ -74,9 +72,9 @@ function findUserAccount() {
                 //    console.log(res);
 
                 if (res[0]) {
-                    console.log("its there")
+
                     if (res[0].cust_first === findName) {
-                        console.log("sign in successful");
+
                         loggedIn = true;
                         var accountLastName = res[0].cust_last;
                         accountID = res[0].cust_id;
@@ -97,16 +95,6 @@ function findUserAccount() {
                     console.log("The information you entered was incorrect, please enter your information again.");
                     signIn();
                 }
-
-
-
-
-
-
-
-
-
-
             })
     });
 }
@@ -140,10 +128,6 @@ function printDatabase() {
         if (err) throw err;
         numberOfRows = parseInt(res[0].NumberOfProducts);
         console.log(numberOfRows);
-
-        // "SELECT * FROM inventory WHERE item_quantity > 0"
-        // "SELECT * FROM inventory"
-
 
         connection.query("SELECT * FROM inventory WHERE item_quantity > 0", function (err, res) {
             if (err) throw err;
@@ -211,8 +195,6 @@ function selectForPurchaseBothSearches(x) {
 
     var numberOfRows;
 
-    // connection.query(`SELECT COUNT(item_name) AS NumberOfProducts FROM inventory ${where}`, function (err, res) {
-
     connection.query(`SELECT COUNT(item_name) AS NumberOfProducts FROM inventory WHERE item_quantity > 0 ${where}`, function (err, res) {
         if (err) throw err;
         numberOfRows = parseInt(res[0].NumberOfProducts);
@@ -278,7 +260,7 @@ function checkQuantity(x, y) {
                 };
 
             } else {
-// y = quantity user wanted 
+
                 inquirer.prompt([
                     {
                         type: "list",
@@ -500,29 +482,21 @@ function collectUserData(x, y, z) {
                                             function (err, res) {
                                                 receipt(first, last, custrID, res[0].order_id, address, city, state, zip, email, phone, totalCost, y, x);
 
-                                                // first, last, cid, order, address, city, state, zip, email, phone, totalOrderPrice, qty, product
-
-
-
-
-                                            } // end of third push to database 
-                                        ); // end of third query
-                                    } // end of third push to database 
-                                ); // end of third query
-
-                            } // end of second push to database 
-                        );  // end of second query
-                    }  // end of first push to database
-                ); // end of first query 
+                                            }
+                                        );
+                                    }
+                                );
+                            }
+                        );
+                    }
+                );
             } else {
                 console.log("Pleae re-enter your information.")
                 collectUserData();
             };
 
-
-        }); // end of second inquirer 
-
-    }); // end of first inquirer
+        });
+    });
 };
 
 
@@ -558,16 +532,10 @@ function checkoutLoggedIn(x, numberInStock, costOfItem) {
                         function (err, res) {
                             receipt(first, last, customerID, res[0].order_id, address, city, state, zip, email, phone, totalCost, numberInStock, x);
 
-
-                            // first, last, cid, order, address, city, state, zip, email, phone, totalOrderPrice, qty, product
-
-
-
-
-                        } // end of third push to database 
-                    ); // end of third query
-                } // end of third push to database 
-            ); // end of third query
+                        }
+                    );
+                }
+            );
         })
 };
 

@@ -17,15 +17,17 @@ var accountID;
 
 connection.connect(function (err) {
     if (err) throw err;
-
+    signIn();
 });
 
 
 
-signIn();
+
 
 function signIn() {
-    console.log(chalk.yellow("              Welcome to Bamazon.com"))
+    console.log(chalk.yellow(`
+                  Welcome to Bamazon.com
+                  `))
     inquirer.prompt([
         {
             type: "list",
@@ -63,8 +65,6 @@ function findUserAccount() {
     ]).then(function (user) {
         var findName = user.name;
         var findEmail = user.email;
-        console.log(findName + "  " + findEmail);
-        // `SELECT cust_first, cust_last, cust_id FROM customers WHERE (cust_first = '${findName}' AND cust_email = '${findEmail}')`
 
         connection.query(`SELECT cust_first, cust_last, cust_id FROM customers WHERE (cust_first = '${findName}' AND cust_email = '${findEmail}')`,
             function (err, res) {
@@ -72,9 +72,9 @@ function findUserAccount() {
                 //    console.log(res);
 
                 if (res[0]) {
-                    console.log("its there")
+
                     if (res[0].cust_first === findName) {
-                        console.log("sign in successful");
+
                         loggedIn = true;
                         var accountLastName = res[0].cust_last;
                         accountID = res[0].cust_id;
@@ -95,16 +95,6 @@ function findUserAccount() {
                     console.log("The information you entered was incorrect, please enter your information again.");
                     signIn();
                 }
-
-
-
-
-
-
-
-
-
-
             })
     });
 }
@@ -134,11 +124,12 @@ function shop() {
 
 function printDatabase() {
     var numberOfRows;
-    connection.query("SELECT COUNT(item_id) AS NumberOfProducts FROM inventory", function (err, res) {
+    connection.query("SELECT COUNT(item_id) AS NumberOfProducts FROM inventory WHERE item_quantity > 0", function (err, res) {
         if (err) throw err;
         numberOfRows = parseInt(res[0].NumberOfProducts);
+        console.log(numberOfRows);
 
-        connection.query("SELECT * FROM inventory", function (err, res) {
+        connection.query("SELECT * FROM inventory WHERE item_quantity > 0", function (err, res) {
             if (err) throw err;
 
             var table = new Table({
@@ -197,21 +188,21 @@ function shopByCategory() {
 function selectForPurchaseBothSearches(x) {
     var where;
     if (x) {
-        where = `WHERE department_name = '${x}'`;
+        where = `AND department_name = '${x}'`;
     } else {
         where = '';
     }
 
     var numberOfRows;
 
-    connection.query(`SELECT COUNT(item_name) AS NumberOfProducts FROM inventory ${where}`, function (err, res) {
+    connection.query(`SELECT COUNT(item_name) AS NumberOfProducts FROM inventory WHERE item_quantity > 0 ${where}`, function (err, res) {
         if (err) throw err;
         numberOfRows = parseInt(res[0].NumberOfProducts);
     });
 
     var itemNameArray = [];
 
-    connection.query(`SELECT item_name FROM inventory ${where}`,
+    connection.query(`SELECT item_name FROM inventory WHERE item_quantity > 0 ${where}`,
         function (err, res) {
 
             for (var i = 0; i < numberOfRows; i++) {
@@ -240,6 +231,8 @@ function selectForPurchaseBothSearches(x) {
 
 
 function checkQuantity(x, y) {
+
+    console.log("this is x at line 251:" + x);
     var costOfItem;
     connection.query(
         `SELECT item_cost AS price FROM inventory WHERE item_name = '${x}'`,
@@ -260,10 +253,10 @@ function checkQuantity(x, y) {
 
                 if (loggedIn) {
                     // function to complete order with saved user info
-                    checkoutLoggedIn(x, numberInStock, costOfItem);
+                    checkoutLoggedIn(x, y, costOfItem);
 
                 } else {
-                    collectUserData(x, numberInStock, costOfItem);
+                    collectUserData(x, y, costOfItem);
                 };
 
             } else {
@@ -281,7 +274,7 @@ function checkQuantity(x, y) {
                         shop();
                     } else {
                         updateProduct(x, numberInStock);
-                        // console.log(loggedIn);
+                        console.log("this is x at line 291: " + x);
                         //   if statement to see if they are logged on or not
                         if (loggedIn) {
                             // function to complete order with saved user info
@@ -329,12 +322,12 @@ function updateProduct(x, y) {
 function categoryPrintDatabase(x) {
     var numberOfRows;
 
-    connection.query(`SELECT COUNT(item_id) AS NumberOfProducts FROM inventory WHERE department_name = '${x}'`, function (err, res) {
+    connection.query(`SELECT COUNT(item_id) AS NumberOfProducts FROM inventory WHERE item_quantity > 0 AND department_name = '${x}'`, function (err, res) {
         if (err) throw err;
         numberOfRows = parseInt(res[0].NumberOfProducts);
     });
 
-    connection.query(`SELECT * FROM inventory WHERE department_name = '${x}'`, function (err, res) {
+    connection.query(`SELECT * FROM inventory WHERE item_quantity > 0 AND department_name = '${x}'`, function (err, res) {
         if (err) throw err;
 
         var table = new Table({
@@ -358,7 +351,7 @@ function receipt(first, last, cid, order, address, city, state, zip, email, phon
 
     console.log(chalk.magenta(`
     ${first},                           Order # ${order}
-                                    Cust # ${cid}
+                                        Cust # ${cid}
 
     Your purchase of ${qty} ${product}(s) will be processes
     as soon as possible. Your order will be shipped
@@ -488,28 +481,27 @@ function collectUserData(x, y, z) {
 
                                             function (err, res) {
                                                 receipt(first, last, custrID, res[0].order_id, address, city, state, zip, email, phone, totalCost, y, x);
-                                            } // end of third push to database 
-                                        ); // end of third query
-                                    } // end of third push to database 
-                                ); // end of third query
 
-                            } // end of second push to database 
-                        );  // end of second query
-                    }  // end of first push to database
-                ); // end of first query 
+                                            }
+                                        );
+                                    }
+                                );
+                            }
+                        );
+                    }
+                );
             } else {
                 console.log("Pleae re-enter your information.")
                 collectUserData();
             };
 
-
-        }); // end of second inquirer 
-
-    }); // end of first inquirer
+        });
+    });
 };
 
 
 function checkoutLoggedIn(x, numberInStock, costOfItem) {
+    console.log("this is x at line 522: " + x);
     var totalCost = (parseFloat(numberInStock) * parseFloat(costOfItem));
 
     connection.query(`SELECT * FROM customers WHERE cust_id = '${accountID}'`,
@@ -538,12 +530,12 @@ function checkoutLoggedIn(x, numberInStock, costOfItem) {
                     connection.query(`SELECT order_id FROM orders WHERE (cust_id = '${customerID}' AND order_product = '${x}')`,
 
                         function (err, res) {
-                            receipt(first, last, customerID, res[0].order_id, address, city, state, zip, email, phone, totalCost, numberInStock, costOfItem);
+                            receipt(first, last, customerID, res[0].order_id, address, city, state, zip, email, phone, totalCost, numberInStock, x);
 
-                        } // end of third push to database 
-                    ); // end of third query
-                } // end of third push to database 
-            ); // end of third query
+                        }
+                    );
+                }
+            );
         })
 };
 

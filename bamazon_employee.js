@@ -15,7 +15,7 @@ var connection = mysql.createConnection({
 
 connection.connect(function (err) {
     if (err) throw err;
-
+    employeeLogin();
 });
 
 function employeeLogin() {
@@ -36,8 +36,6 @@ function employeeLogin() {
     
     });
 };
-
-employeeLogin();
 
 
 function managerLogIn() {
@@ -439,7 +437,7 @@ function executiveMenu() {
             type: "list",
             name: "executiveActivity",
             message: "Select the operation to execute.",
-            choices: ["View product sales reports", "Add new department", "LogOut"]
+            choices: ["View product sales reports", "Add new department", "Update manager information", "LogOut"]
         },
 
     ]).then(function (user) {
@@ -449,6 +447,8 @@ function executiveMenu() {
             salesReport();
         } else if (user.executiveActivity === "Add new department") {
             enterNewDepartment();
+        } else if (user.executiveActivity === "Update manager information") {
+            updateManagers();
         } else if (user.executiveActivity === "LogOut") {
             console.log(chalk.yellow("Exiting Program"))
             connection.end();
@@ -456,6 +456,7 @@ function executiveMenu() {
     });
 
 };
+
 
 
 function salesReport() {
@@ -580,3 +581,243 @@ function financialDepartmentSearch() {
     );
 
 };
+
+
+function updateManagers() {
+    inquirer.prompt([
+        {
+            type: "list",
+            name: "update",
+            message: "Select from the list below.",
+            choices: ["Add new Manager", "Delete Manager", "Edit Manager Information", "Exit"]
+        },
+
+    ]).then(function (user) {
+
+        if (user.update === "Add new Manager") {
+            addNewManager();
+        } else if (user.update === "Delete Manager") {
+            deleteManager();
+        } else if (user.update === "Edit Manager Information") {
+            editManagerInfo();
+        } else if (user.update === "Exit") {
+
+        };
+    });
+};
+
+
+function addNewManager() {
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "newFirst",
+            message: "Enter the managers first name.",
+        },
+        {
+            type: "input",
+            name: "newLast",
+            message: "Enter the managers last name.",
+        },
+        {
+            type: "input",
+            name: "newdept",
+            message: "Enter the managers department.",
+        },
+
+    ]).then(function (user) {
+
+        var mfirst = user.newFirst;
+        var mlast = user.newLast;
+        var mdept = user.newdept;
+
+
+        console.log(chalk.magenta(`
+       You entered the following information:
+       New Manager: ${mfirst} ${mlast}.
+       Department: ${mdept}.
+       
+       `));
+
+        inquirer.prompt([
+            {
+                type: "confirm",
+                name: "confirm",
+                message: "Is this information correct?",
+            },
+
+        ]).then(function (user) {
+
+            if (user.confirm) {
+                // push to database
+                connection.query("INSERT INTO managers SET ?",
+                    {
+                        manager_first: mfirst,
+                        manager_last: mlast,
+                        manager_department: mdept,
+                        manager_password: 1234,
+                    },
+                    function (err, res) {
+                        if (err) throw err;
+                        console.log(chalk.yellow("Manager added to Database"));
+                        executiveMenu();
+                    }
+                );
+
+            } else {
+                addNewManager();
+            }
+        });
+    });
+};
+
+function deleteManager() {
+    var numberOfRows;
+
+    connection.query(`SELECT COUNT(manager_last) AS NumberOfProducts FROM managers`, function (err, res) {
+        if (err) throw err;
+
+        numberOfRows = parseInt(res[0].NumberOfProducts);
+    });
+
+    var managerArray = [];
+
+    connection.query(
+        `SELECT manager_last FROM managers`,
+        function (err, res) {
+            if (err) throw err;
+
+            for (var i = 0; i < numberOfRows; i++) {
+                managerArray.push(res[i].manager_last);
+            };
+
+            inquirer.prompt([
+                {
+                    type: "list",
+                    name: "managerSelected",
+                    message: "Which manager would you like to select?",
+                    choices: managerArray,
+                },
+
+            ]).then(function (user) {
+                var deleteManager = user.managerSelected;
+
+                connection.query(`SELECT manager_first FROM managers WHERE manager_last = '${deleteManager}' `,
+                    function (err, res) {
+                        if (err) throw err;
+                        console.log(chalk.red(`Is the manager you would like to delete? ${res[0].manager_first} ${deleteManager}`));
+
+                        inquirer.prompt([
+                            {
+                                type: "confirm",
+                                name: "confirm",
+                                message: "Is this the manager you would like to delete?",
+                            },
+
+                        ]).then(function (user) {
+                            if (user.confirm) {
+
+                                connection.query(`DELETE FROM managers WHERE manager_last = '${deleteManager}'`,
+                                    function (err, res) {
+
+                                        console.log("manager deleted");
+                                        updateManagers();
+                                    });
+                            } else {
+                                console.log("didnt want that one")
+                                updateManagers();
+                            };
+                        });
+                    })
+            });
+        }
+    );
+};
+
+function editManagerInfo() {
+    var numberOfRows;
+
+    connection.query(`SELECT COUNT(manager_first) AS NumberOfManagers FROM managers`, function (err, res) {
+        if (err) throw err;
+        numberOfRows = parseInt(res[0].NumberOfManagers);
+  
+
+    var itemNameArray = [];
+
+    connection.query(
+        `SELECT manager_first FROM managers`,
+        function (err, res) {
+            if (err) throw err;
+
+            for (var i = 0; i < numberOfRows; i++) {
+                itemNameArray.push(res[i].manager_first);
+            };
+
+            inquirer.prompt([
+                {
+                    type: "list",
+                    name: "nameSelectedToUpdate",
+                    message: "Which manager would you like to update?",
+                    choices: itemNameArray,
+                },
+
+            ]).then(function (user) {
+                var managerToUpdate = user.nameSelectedToUpdate;
+
+                inquirer.prompt([
+                    {
+                        type: "list",
+                        name: "toEdit",
+                        message: "Which item would you like to modify?",
+                        choices: ["First Name", "Last Name", "Department"],
+                    },
+                
+                ]).then(function (user) {
+                   var toEdit = user.toEdit;
+                
+                    inquirer.prompt([
+                        {
+                            type: "input",
+                            name: "newValue",
+                            message: "Enter the new value.",
+                        },
+                       
+                    ]).then(function (user) {
+                        var newValue = user.newValue;
+                
+                        console.log(chalk.red(`    Data to update: New ${toEdit} = ${newValue}.`));
+                
+                        inquirer.prompt([
+                            {
+                                type: "confirm",
+                                name: "confirm",
+                                message: "Is this information correct?",
+                            },
+                           
+                        ]).then(function (user) {
+                           if (user.confirm) {
+
+                               if(toEdit === "First Name") {
+                                   toEdit = 'manager_first';
+                               } else if (toEdit === "Last Name") {
+                                   toEdit = 'manager_last';
+                               } else if(toEdit = 'Department')
+                                    toEdit = 'manager_department';
+                                                                             
+                               connection.query(`UPDATE managers SET ${toEdit} = '${newValue}' WHERE manager_first = '${managerToUpdate}'`, function (err, res) {
+                                if (err) throw err;
+                                executiveMenu();
+
+                               })
+                           } else {
+                            editManagerInfo();
+                           }
+                        })
+                    });
+                });
+            })
+        });
+    });
+}
+
+
