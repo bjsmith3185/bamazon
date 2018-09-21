@@ -90,28 +90,28 @@ function enterNewDepartment() {
 };
 
 
-function executiveLogIn() {
-    inquirer.prompt([
-        {
-            type: "input",
-            name: "executiveName",
-            message: "Enter your name.",
-        },
-        {
-            type: "input",
-            name: "executivePassword",
-            message: "Enter your password.",
-        },
+// function executiveLogIn() {
+//     inquirer.prompt([
+//         {
+//             type: "input",
+//             name: "executiveName",
+//             message: "Enter your name.",
+//         },
+//         {
+//             type: "input",
+//             name: "executivePassword",
+//             message: "Enter your password.",
+//         },
 
-    ]).then(function (user) {
-        if (user.executiveName && user.executivePassword) {
-            executiveMenu();
-        } else {
-            console.log("Enter a valid name and password")
-            executiveLogIn();
-        }
-    });
-};
+//     ]).then(function (user) {
+//         if (user.executiveName && user.executivePassword) {
+//             executiveMenu();
+//         } else {
+//             console.log("Enter a valid name and password")
+//             executiveLogIn();
+//         }
+//     });
+// };
 
 
 function executiveMenu() {
@@ -510,3 +510,37 @@ function editManagerInfo() {
 }
 
 
+function executiveLogIn() {
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "executiveFirst",
+            message: "Enter your first name.",
+        },
+        {
+            type: "input",
+            name: "executiveLast",
+            message: "Enter your last name.",
+        },
+        {
+            type: "input",
+            name: "executivePassword",
+            message: "Enter your password.",
+        },
+
+    ]).then(function (user) {
+
+
+        connection.query(`SELECT exec_first, exec_last, password FROM executives`, function (err, res) {
+            if (err) throw err;
+            
+            if (user.executiveFirst === res[0].exec_first && user.executiveLast === res[0].exec_last && user.executivePassword === res[0].password) {
+                executiveMenu();
+            } else {
+                console.log("Enter a valid name and password")
+                executiveLogIn();
+            }
+
+        })
+    });
+};

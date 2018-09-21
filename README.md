@@ -4,6 +4,13 @@ using node.js and mysql
 
 bamazon let the user select from 2 files; bamazon_customer.js  or  bamazon_employee.js
 
+NOTES;
+Executive name and password: first name 'brian'  last name 'smith'  password '1234'  all lowercase
+
+A manager's name and password is; first name 'john' password '1234'  all lowercase
+
+
+
 bamazon_customer.js features;
 
 - user can sign-in (if they have make a previous purchase) or shop as a guest.

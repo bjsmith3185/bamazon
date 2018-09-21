@@ -294,66 +294,6 @@ function enterNewItem() {
 
 
 
-
-// function executiveLogIn() {
-//     inquirer.prompt([
-//         {
-//             type: "input",
-//             name: "executiveName",
-//             message: "Enter your name.",
-//         },
-//         {
-//             type: "input",
-//             name: "executivePassword",
-//             message: "Enter your password.",
-//         },
-
-//     ]).then(function (user) {
-//         if (user.executiveName && user.executivePassword) {
-//             executiveMenu();
-//         } else {
-//             console.log("Enter a valid name and password")
-//             executiveLogIn();
-//         }
-//     });
-// };
-
-
-// function executiveMenu() {
-
-//     inquirer.prompt([
-//         {
-//             type: "list",
-//             name: "executiveActivity",
-//             message: "Select the operation to execute.",
-//             choices: ["View all products", "View low inventory items", "Add new item to inventory", "Modify an item in inventory", "LogOut"]
-//         },
-
-//     ]).then(function (user) {
-//         console.log(user.executiveActivity);
-
-//         if (user.executiveActivity === "View all products") {
-//             displayAllProducts();
-//         } else if (user.executiveActivity === "View low inventory items") {
-//             lowInventory();
-//         } else if (user.executiveActivity === "Add new item to inventory") {
-//             enterNewItem();
-//         } else if (user.executiveActivity === "Modify an item in inventory") {
-//             modifyInventory();
-//         } else if (user.executiveActivity === "LogOut") {
-//             console.log(chalk.yellow("Exiting Program"))
-//             connection.end();
-//         }
-//     });
-
-// };
-
-
-//----------------------------
-
-
-
-
 function enterNewDepartment() {
 
     inquirer.prompt([
@@ -456,7 +396,6 @@ function executiveMenu() {
     });
 
 };
-
 
 
 function salesReport() {
