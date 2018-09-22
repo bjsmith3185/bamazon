@@ -65,6 +65,32 @@ CREATE TABLE orders (
     PRIMARY KEY (order_id)
   );
 
+CREATE TABLE managers (
+  manager_id INT NOT NULL AUTO_INCREMENT,
+  manager_first VARCHAR(45) NOT NULL,
+  manager_last VARCHAR(45) NOT NULL,
+  manager_department VARCHAR(45) NOT NULL,
+  manager_password VARCHAR(45),
+  PRIMARY KEY (manager_id)
+);
+  
+  
+CREATE TABLE executives (
+  exec_id INT NOT NULL AUTO_INCREMENT,
+  exec_first VARCHAR(45) NOT NULL,
+  exec_last VARCHAR(45) NOT NULL,
+  password VARCHAR(45),
+  PRIMARY KEY (exec_id)
+);
 
+
+INSERT INTO executives (exec_first, exec_last, password)
+VALUES ("brian", "smith", "1234"); 
+
+
+INSERT INTO managers (manager_first, manager_last, manager_department, manager_password)
+VALUES ("john", "tull", "electronics", 1234),
+       ("kim", "stone", "home", 1234),
+       ("larry", "beachnut", "food", 1234);
 
 SELECT * FROM inventory;
